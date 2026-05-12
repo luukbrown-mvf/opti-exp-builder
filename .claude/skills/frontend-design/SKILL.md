@@ -1,11 +1,11 @@
 ---
 name: frontend-design
-description: Create distinctive, production-grade visual changes for Optimizely A/B test variants by editing page/changes.js directly. Use this skill when the user asks to add or restyle any visual element on the fetched page — banners, CTAs, modals, sticky bars, layout shifts, new components, restyled buttons, copy-with-styling. NOT for pure deletions ("hide X") or text-only edits, which don't need design thinking. Generates creative, polished code that avoids generic AI aesthetics.
+description: Produce production-grade visual changes for Optimizely A/B test variants by editing page/changes.js directly. Use this skill when the user asks to add or restyle any visual element on the fetched page — banners, CTAs, modals, sticky bars, layout shifts, new components, restyled buttons, copy-with-styling. NOT for pure deletions ("hide X") or text-only edits, which don't need design thinking. Generates polished, intentional code that lives inside the existing brand and avoids generic AI aesthetics.
 ---
 
-Based on the canonical Anthropic frontend-design skill, adapted for this workflow's single-file output target. The aesthetic guidance is unmodified — the only additions are the output contract for editing `page/changes.js` in an Optimizely-compatible way.
+Based on the canonical Anthropic frontend-design skill, reframed for brand-extension on existing pages rather than greenfield interface design. The structure is preserved; the aesthetic guidance is rewritten so the existing brand is a hard constraint, not a starting point you can override.
 
-This skill guides creation of distinctive, production-grade visual changes that avoid generic "AI slop" aesthetics. Implement real working code in `page/changes.js` with exceptional attention to aesthetic details and creative choices.
+This skill guides creation of production-grade visual changes that live inside an existing brand. Implement real working code in `page/changes.js` with exceptional attention to detail.
 
 The user is modifying a page already fetched into `page/original.html`. Your job is to produce the variant JS in `page/changes.js` that — once pasted into Optimizely's Custom Code box — applies the change live.
 
@@ -40,36 +40,35 @@ Anchor design choices in what's already there. The variant should feel like part
 
 ## Design Thinking
 
-Before coding, understand the context and commit to a BOLD aesthetic direction:
-- **Purpose**: What problem does this interface solve? Who uses it?
-- **Tone**: Pick an extreme: brutally minimal, maximalist chaos, retro-futuristic, organic/natural, luxury/refined, playful/toy-like, editorial/magazine, brutalist/raw, art deco/geometric, soft/pastel, industrial/utilitarian, etc. There are so many flavors to choose from. Use these for inspiration but design one that is true to the aesthetic direction.
-- **Constraints**: Technical requirements (framework, performance, accessibility).
-- **Differentiation**: What makes this UNFORGETTABLE? What's the one thing someone will remember?
+Before coding, read the existing page and pick a focused expression *inside* the brand it already establishes:
 
-**CRITICAL**: Choose a clear conceptual direction and execute it with precision. Bold maximalism and refined minimalism both work - the key is intentionality, not intensity.
+- **Purpose**: What does this change need to do? Who'll act on it?
+- **Brand register**: Read the existing tone from `page/original.html` — refined and minimal, bold and editorial, soft and reassuring, dense and utilitarian, etc. The variant should feel like the same designer added it, not a different one.
+- **Constraints**: Technical requirements, viewport behaviour, conflicts with existing chrome.
+- **Differentiation within scope**: Inside the brand's vocabulary, what's the sharpest version of *this specific change*? What makes it land?
+
+**CRITICAL**: Intentionality, not intensity. Bold maximalism and refined minimalism both work — match whatever the page already does, and execute with precision. Confidence inside a constraint outperforms ambition that breaks it.
 
 Then implement working code in `page/changes.js` that is:
 - Production-grade and functional
-- Visually striking and memorable
-- Cohesive with a clear aesthetic point-of-view
+- Cohesive with the surrounding page — it should look like part of the site, not an insert
 - Meticulously refined in every detail
 
 ## Frontend Aesthetics Guidelines
 
-Focus on:
-- **Typography**: Choose fonts that are beautiful, unique, and interesting. Avoid generic fonts like Arial and Inter; opt instead for distinctive choices that elevate the frontend's aesthetics; unexpected, characterful font choices. Pair a distinctive display font with a refined body font. Load via Google Fonts inside `injectStyles` using `@import` at the very top of the CSS string.
-- **Color & Theme**: Commit to a cohesive aesthetic. Use CSS variables for consistency. Dominant colors with sharp accents outperform timid, evenly-distributed palettes.
-- **Motion**: Use animations for effects and micro-interactions. Prioritize CSS-only solutions. Focus on high-impact moments: one well-orchestrated entrance with staggered reveals creates more delight than scattered micro-interactions. Use hover states that surprise. Always wrap in `@media (prefers-reduced-motion: reduce)` to disable for users who request reduced motion.
-- **Spatial Composition**: Unexpected layouts. Asymmetry. Overlap. Diagonal flow. Grid-breaking elements. Generous negative space OR controlled density. Match composition complexity to the surface (a sticky banner is not the place for diagonal flow; a hero overhaul is).
-- **Backgrounds & Visual Details**: Create atmosphere and depth rather than defaulting to solid colors. Add contextual effects and textures that match the overall aesthetic. Apply creative forms like gradient meshes, noise textures, geometric patterns, layered transparencies, dramatic shadows, decorative borders, custom cursors, and grain overlays.
+These describe the *quality of execution* applied within the brand's existing vocabulary — they are not a free choice of aesthetic.
 
-NEVER use generic AI-generated aesthetics like overused font families (Inter, Roboto, Arial, system fonts), cliched color schemes (particularly purple gradients on white backgrounds), predictable layouts and component patterns, and cookie-cutter design that lacks context-specific character.
+- **Typography**: Use the site's existing font stack. If the site has a distinctive display face, lean into it for headers. If it uses system fonts or a clean sans, that *is* the brand — don't import Playfair or Bricolage to "elevate". Vary weights, sizes, and tracking within the existing family.
+- **Color**: Anchor to the brand palette pulled from `page/original.html`. Lead with dominant brand colors; one or two sharp accents *from the brand* outperform timid, evenly-distributed palettes. Don't invent new hues unless the brief explicitly asks for a break with brand.
+- **Motion**: Reserved and high-impact. One well-orchestrated entrance, maybe one hover state, then quiet. Always wrap animations in `@media (prefers-reduced-motion: reduce)`.
+- **Spatial composition**: Match the rhythm and density of the surrounding page. Don't introduce asymmetry, diagonal flow, or grid-breaking elements unless the site already uses them.
+- **Detail**: Shadows, borders, subtle gradients within the brand palette. Skip novel textures, gradient meshes, or noise overlays unless the existing site already uses them.
 
-Interpret creatively and make unexpected choices that feel genuinely designed for the context. No design should be the same. Vary between light and dark themes, different fonts, different aesthetics. NEVER converge on common choices (Space Grotesk, for example) across generations.
+**Generic AI output ≠ on-brand.** Generic comes from absence of intentional craft — timid palettes, default rounded corners, predictable centered cards, copy-paste component patterns. Matching the brand with intention and precision *avoids* generic by definition; it doesn't cause it.
 
-**IMPORTANT**: Match implementation complexity to the aesthetic vision. Maximalist designs need elaborate code with extensive animations and effects. Minimalist or refined designs need restraint, precision, and careful attention to spacing, typography, and subtle details. Elegance comes from executing the vision well.
+**Variants should still feel different from each other.** The brand constrains the vocabulary (palette, typography, register, density) — not the message. Two banners on the same site should differ in *emphasis, hierarchy, copy, composition, which accent leads, where attention sits*. Same alphabet, different sentences. If every variant on a given brand looks identical, you're over-constraining; if they look like they're from different sites, you're under-constraining.
 
-Remember: Claude is capable of extraordinary creative work. Don't hold back, show what can truly be created when thinking outside the box and committing fully to a distinctive vision.
+**Match implementation complexity to the brand's register.** Brands that are bold need elaborate, confident variant work. Brands that are refined need restraint, meticulous spacing, and typographic precision. Elegance comes from executing the brand's own vision well, not from importing a new one.
 
 ## Wiring runtime behaviour
 
