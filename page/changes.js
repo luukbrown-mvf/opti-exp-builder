@@ -10,22 +10,23 @@
                 resolve(el);
                 return;
             }
-            const observer = new MutationObserver(() => {
-                const found = document.querySelector(selector);
-                if (found) {
-                    clearTimeout(timer);
-                    observer.disconnect();
-                    resolve(found);
+            const timer = setTimeout(() => {
+                observer.disconnect();
+                reject(new Error(`Timeout: ${selector}`));
+            }, timeout);
+            const observer = new MutationObserver((mutations) => {
+                for (const mutation of mutations) {
+                    for (const node of mutation.addedNodes) {
+                        if (node.nodeType !== 1) continue;
+                        const found = node.matches(selector) ? node : node.querySelector(selector);
+                        if (found) { clearTimeout(timer); observer.disconnect(); resolve(found); return; }
+                    }
                 }
             });
             observer.observe(document.documentElement, {
                 childList: true,
                 subtree: true,
             });
-            const timer = setTimeout(() => {
-                observer.disconnect();
-                reject(new Error(`Timeout: ${selector}`));
-            }, timeout);
         });
     };
 
