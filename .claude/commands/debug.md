@@ -6,7 +6,7 @@ Inspects the running variant at http://localhost:3000 using chrome-devtools MCP,
 
 ## Steps
 
-1. **Check active page.** If `page/original.html` doesn't exist, tell the user there's no active page (run `/fetch <url>` first) and stop.
+1. **Check active page.** If `page/index.html` doesn't exist, tell the user there's no active page (run `/fetch <url>` first) and stop.
 
 2. **Capture desktop.** `new_page` to http://localhost:3000 with `background: true` (avoids stealing focus). Then `resize_page` to 1280×800, `wait_for` network idle, `take_screenshot` (full page) saved to `page/debug-desktop.png`, `list_console_messages`.
 
