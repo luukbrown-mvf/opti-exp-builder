@@ -36,7 +36,7 @@ const _cro = (() => {
                 for (const mutation of mutations) {
                     const found = findInAddedNodes(
                         mutation.addedNodes,
-                        selector,
+                        selector
                     );
                     if (found) {
                         clearTimeout(timer);
@@ -48,7 +48,7 @@ const _cro = (() => {
             });
             observer.observe(document.documentElement, {
                 childList: true,
-                subtree: true,
+                subtree: true
             });
         });
     };
