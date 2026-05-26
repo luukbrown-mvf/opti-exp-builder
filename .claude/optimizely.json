@@ -1,0 +1,24 @@
+{
+    "project_id": "20610930463",
+    "project_name": "MVF Global - Capture Edge",
+    "qa_audience_id": "21033421785",
+    "qa_audience_name": "QA Audience",
+    "qa_url_param": "optly_qa=true",
+    "default_owner_initials": "LB",
+    "default_team": "Websites Team",
+    "metric_packs": {
+        "advertorial": [
+            { "event_id": "23174871600", "name": "Custom - Final Conversion",          "aggregator": "unique", "scope": "visitor", "winning_direction": "increasing" },
+            { "event_id": "22649682300", "name": "Advertorial: Click Everywhere CTA",  "aggregator": "unique", "scope": "visitor", "winning_direction": "increasing" },
+            { "event_id": "24031000756", "name": "Custom - Completed First Question",  "aggregator": "unique", "scope": "visitor", "winning_direction": "increasing" },
+            { "event_id": "23972631189", "name": "Custom - Completed ZIP/Postal code", "aggregator": "unique", "scope": "visitor", "winning_direction": "increasing" },
+            { "event_id": "24015700325", "name": "Custom - Completed Email Address",   "aggregator": "unique", "scope": "visitor", "winning_direction": "increasing" }
+        ],
+        "stf": [
+            { "event_id": "23174871600", "name": "Custom - Final Conversion",          "aggregator": "unique", "scope": "visitor", "winning_direction": "increasing" },
+            { "event_id": "24031000756", "name": "Custom - Completed First Question",  "aggregator": "unique", "scope": "visitor", "winning_direction": "increasing" },
+            { "event_id": "23972631189", "name": "Custom - Completed ZIP/Postal code", "aggregator": "unique", "scope": "visitor", "winning_direction": "increasing" },
+            { "event_id": "24015700325", "name": "Custom - Completed Email Address",   "aggregator": "unique", "scope": "visitor", "winning_direction": "increasing" }
+        ]
+    }
+}

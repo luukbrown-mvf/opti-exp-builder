@@ -1,0 +1,8 @@
+{
+    "mcpServers": {
+        "optimizely-experimentation": {
+            "type": "http",
+            "url": "https://exp.mcp.opal.optimizely.com/mcp"
+        }
+    }
+}

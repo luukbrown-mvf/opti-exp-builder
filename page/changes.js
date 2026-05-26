@@ -58,26 +58,15 @@ const _cro = (() => {
 
 // ── Experiment (edit here) ─────────────────────────────────────────────────
 (() => {
-    // set up custom tracking store
-    // window.optimizelyEdge = window.optimizelyEdge || [];
-    // import optimizely utils ( wait for etc ...)
-    // const utils = window.optimizelyEdge.get("utils");
-
-    // import abstracted utilities
     const { ready, waitForElement } = _cro;
 
     // Most code goes here — runs when the DOM is ready.
-    ready(() => {});
+    ready(() => {
 
-    // LOCAL DEVELOPMENT
+    });
+
     // Use waitForElement only for elements injected after page load by JS (e.g. React, lazy loaders).
     // waitForElement('.hero h1').then((el) => {
     //   el.textContent = 'New headline';
     // });
-
-    // PRODUCTION OPTIMISATION
-    // In optimizely, wait for element can be replaced by the optimizley utils equivalent
-    // utils
-    //     .waitForElement(".chameleon-overlay .overlay-subtitle + div + div")
-    //     .then(() => {});
 })();
