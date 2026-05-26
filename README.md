@@ -11,12 +11,13 @@ Build, QA, and ship Optimizely A/B tests by chatting with Claude. Describe the v
    /mcp
    ```
    You should see `optimizely-experimentation` already in the list (it's configured at the repo level via `.mcp.json`). Authenticate it via the browser when prompted. One-time setup.
-4. Copy `.env.example` to `.env` and fill in your personal defaults (used to build experiment names):
+4. Create a `.env` file at the repo root with your personal defaults (used to build experiment names):
    ```
    TEAM_NAME=Websites Team
-   EXPERIMENTER_INITIALS=LB
+   EXPERIMENTER_INITIALS=<your initials>
    AUDIENCE_SEGMENT=B2C RoW
    ```
+   `.env` is gitignored — your initials stay local.
 5. That's it — Claude installs the rest (Node, Playwright, browser-sync) the first time you run `/fetch`.
 
 ## The whole flow
@@ -125,7 +126,6 @@ If you want to wipe your changes too, run `/reset` after `/fetch`.
 | `page/index.html` | Fetched snapshot of the page. Don't edit. Gitignored. |
 | `.claude/optimizely.json` | Project config: project ID, QA audience ID, metric packs. **Edit when metrics or audience change.** |
 | `.env` | Your personal defaults: `TEAM_NAME`, `EXPERIMENTER_INITIALS`, `AUDIENCE_SEGMENT`. Used to build the experiment name. Gitignored. |
-| `.env.example` | Template for `.env`. Copy this on first setup. |
 | `.experiment-id` | Last-created experiment ID. Used by `/republish`, `/qa`, `/golive`. Gitignored. |
 | `app/` | Implementation files (preview server, Playwright propagation poller). Don't touch. |
 | `CLAUDE.md` | Instructions Claude follows when building experiments. |

@@ -9,7 +9,7 @@ Creates a new A/B experiment in Optimizely (MVF Global - Capture Edge) using the
 - `page/index.html` exists (i.e. user has run `/fetch <url>`)
 - `page/changes.js` and `page/changes.css` exist
 - `.claude/optimizely.json` exists
-- `.env` exists at repo root with `TEAM_NAME`, `EXPERIMENTER_INITIALS`, `AUDIENCE_SEGMENT` set. If `.env` is missing, tell the user to copy `.env.example` to `.env` and fill it in.
+- `.env` exists at repo root with `TEAM_NAME`, `EXPERIMENTER_INITIALS`, `AUDIENCE_SEGMENT` set. If `.env` is missing, tell the user to create it with those three keys (see README's first-time setup).
 - The Optimizely Experimentation MCP (`optimizely-experimentation`) is authenticated. If not, tell the user to run `/mcp` and authenticate, then re-run `/create`.
 - **`.experiment-id` does NOT exist** (or is empty). If it already points at an experiment, stop and tell the user: *"An experiment is already tracked (`.experiment-id` = `<id>`). Run `/republish` to push changes to it, or delete `.experiment-id` first if you really want a fresh experiment."* Do NOT silently overwrite.
 
