@@ -24,13 +24,13 @@ The team uses this to ship variants quickly without context-switching into code.
 The full lifecycle, end to end, is:
 
 ```
-/fetch <url> → describe changes → /debug (if needed) → /push → /qa → /golive
+/fetch <url> → describe changes → /debug (if needed) → /create → /qa → /golive
 ```
 
 1. User runs `/fetch <url>` — the page is fetched to `page/index.html` (with `changes.css` and `changes.js` already injected), the preview server is started if not running, and a Browser Sync URL is printed. Only `page/index.html` is overwritten — `changes.css` and `changes.js` are untouched.
 2. User describes changes in plain English. You edit `page/changes.css` for styling and `page/changes.js` for behaviour.
 3. The local server live-reloads on save — user verifies in their browser.
-4. When happy, the user runs `/push` — this creates the experiment in Optimizely with the QA Audience attached, the right metric pack (advertorial vs STF), and the variant code from `page/changes.js` + `page/changes.css`. The experiment is `running` but only the QA Audience sees it.
+4. When happy, the user runs `/create` — this creates the experiment in Optimizely with the QA Audience attached, the right metric pack (advertorial vs STF), and the variant code from `page/changes.js` + `page/changes.css`. The experiment is `running` but only the QA Audience sees it.
 5. User QAs by opening the QA URL Claude returns (`?optly_qa=true&optimizely_x=<id>`). They can run `/qa` to confirm Optimizely's stored state matches local.
 6. When verified, user runs `/golive` — swaps the QA Audience for `everyone`. Real traffic flows.
 
@@ -38,7 +38,7 @@ The full lifecycle, end to end, is:
 
 ### Project config
 
-`.claude/optimizely.json` holds the project-wide state used by `/push`, `/qa`, and `/golive`:
+`.claude/optimizely.json` holds the project-wide state used by `/create`, `/qa`, and `/golive`:
 
 - `project_id`: MVF Global - Capture Edge (`20610930463`). This is the only project we work in.
 - `qa_audience_id`: The QA Audience (`21033421785`) — URL-param-based via `?optly_qa=true`.
@@ -49,7 +49,7 @@ If metric event IDs change or a new audience is added, update this file (not the
 
 ### Experiment state
 
-`.experiment-id` in the repo root holds the ID of the last-pushed experiment. `/qa` and `/golive` default to that ID. Both commands accept an explicit ID as an argument to override.
+`.experiment-id` in the repo root holds the ID of the last-created experiment. `/qa` and `/golive` default to that ID. Both commands accept an explicit ID as an argument to override.
 
 ## Files
 

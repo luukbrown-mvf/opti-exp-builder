@@ -1,12 +1,12 @@
 # Optimizely Experiment Builder
 
-Build, QA, and ship Optimizely A/B tests by chatting with Claude. Describe the variant in plain English, Claude writes the JS and CSS, then `/push` creates the experiment in Optimizely directly — no copy-paste, no clicks in the UI.
+Build, QA, and ship Optimizely A/B tests by chatting with Claude. Describe the variant in plain English, Claude writes the JS and CSS, then `/create` creates the experiment in Optimizely directly — no copy-paste, no clicks in the UI.
 
 ## First-time setup
 
 1. You should already have Claude Code installed (IT set it up). If you don't, get it from them.
 2. Add the `chrome-devtools` MCP (needed for `/debug`). Easiest: open Claude Code and ask it *"install the chrome-devtools MCP"*.
-3. Add the **Optimizely Experimentation MCP** (needed for `/push`, `/qa`, `/golive`). In Claude Code, run:
+3. Add the **Optimizely Experimentation MCP** (needed for `/create`, `/qa`, `/golive`). In Claude Code, run:
    ```
    /mcp
    ```
@@ -16,7 +16,7 @@ Build, QA, and ship Optimizely A/B tests by chatting with Claude. Describe the v
 ## The whole flow
 
 ```
-/fetch <url>     →  describe changes  →  /debug (if needed)  →  /push  →  /qa  →  /golive
+/fetch <url>     →  describe changes  →  /debug (if needed)  →  /create  →  /qa  →  /golive
 ```
 
 ### 1. Fetch the page
@@ -39,10 +39,10 @@ Describe changes in plain English:
 
 Claude edits `page/changes.css` (for styling) and `page/changes.js` (for behaviour). The browser live-reloads each time Claude saves. Keep iterating until you're happy. If something looks off, run `/debug`.
 
-### 3. Push to Optimizely
+### 3. Create the experiment in Optimizely
 
 ```
-/push
+/create
 ```
 
 Claude will ask:
@@ -85,7 +85,7 @@ Confirms once, then swaps the QA Audience for `everyone` so real traffic flows. 
 | `/stop` | Stops the preview server. |
 | `/reset` | Wipes `changes.js` and `changes.css` back to blank stubs. **Keeps the fetched page.** |
 | `/debug` | Opens the page in a controlled browser, screenshots it, reads the console, and fixes or reports the issue. |
-| `/push` | Creates the experiment in Optimizely with QA Audience attached. |
+| `/create` | Creates the experiment in Optimizely with QA Audience attached. Reports the Optimizely state after creating (same info as `/qa`). |
 | `/qa` | Reports the current state of the experiment in Optimizely. |
 | `/golive` | Removes the QA Audience so the experiment serves everyone. |
 
@@ -103,7 +103,7 @@ If you want to wipe your changes too, run `/reset` after `/fetch`.
 | `page/changes.css` | **Your variant CSS.** Goes onto Variation 1 in Optimizely. |
 | `page/index.html` | Fetched snapshot of the page. Don't edit. Gitignored. |
 | `.claude/optimizely.json` | Project config: project ID, QA audience ID, metric packs. **Edit when metrics or audience change.** |
-| `.experiment-id` | Last-pushed experiment ID. Used by `/qa` and `/golive`. Gitignored. |
+| `.experiment-id` | Last-created experiment ID. Used by `/qa` and `/golive`. Gitignored. |
 | `app/` | Implementation files. Don't touch. |
 | `CLAUDE.md` | Instructions Claude follows when building experiments. |
 
@@ -120,4 +120,4 @@ If the Optimizely MCP isn't available or you'd rather create the experiment in t
 
 - Paste the **entire contents** of `changes.js` — including the wrapping `(function() { ... })();`.
 - Optimizely's Custom Code runs **before** the page loads. Claude follows the right pattern automatically (`waitForElement` handles anything that loads after the initial paint).
-- For QA, use Optimizely's standard QA preview flow (`?optly_qa=true&optimizely_x=<experimentId>&optimizely_log=debug`) — `/push` prints the exact URL for you.
+- For QA, use Optimizely's standard QA preview flow (`?optly_qa=true&optimizely_x=<experimentId>&optimizely_log=debug`) — `/create` prints the exact URL for you.

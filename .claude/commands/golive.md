@@ -8,7 +8,7 @@ Removes the QA Audience from the experiment so it serves the whole audience matc
 
 1. **Resolve the experiment ID.**
    - If `$ARGUMENTS` is a numeric string, use it as the experiment ID.
-   - Otherwise, read `.experiment-id` from the repo root. If it doesn't exist, tell the user to run `/push` first (or pass an experiment ID directly), and stop.
+   - Otherwise, read `.experiment-id` from the repo root. If it doesn't exist, tell the user to run `/create` first (or pass an experiment ID directly), and stop.
 
 2. **Read the config** (`.claude/optimizely.json`) — you need `project_id` and `qa_audience_id`.
 

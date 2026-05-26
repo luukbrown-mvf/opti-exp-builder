@@ -1,6 +1,6 @@
 # QA Status Check
 
-Shows the current state of the most recently pushed experiment in Optimizely. Use this right before `/golive` to confirm Optimizely actually has what you tested locally.
+Shows the current state of the most recently created experiment in Optimizely. Use this right before `/golive` to confirm Optimizely actually has what you tested locally.
 
 `$ARGUMENTS` is optional. If non-empty, it's used as the experiment ID (otherwise reads from `.experiment-id`).
 
@@ -8,7 +8,7 @@ Shows the current state of the most recently pushed experiment in Optimizely. Us
 
 1. **Resolve the experiment ID.**
    - If `$ARGUMENTS` is a numeric string, use it as the experiment ID.
-   - Otherwise, read `.experiment-id` from the repo root. If it doesn't exist, tell the user to run `/push` first (or pass an experiment ID directly), and stop.
+   - Otherwise, read `.experiment-id` from the repo root. If it doesn't exist, tell the user to run `/create` first (or pass an experiment ID directly), and stop.
 
 2. **Read the config** (`.claude/optimizely.json`) — you need `project_id` and `qa_audience_id` to render the report.
 

@@ -1,6 +1,6 @@
-# Push to Optimizely
+# Create Experiment in Optimizely
 
-Creates a new A/B experiment in Optimizely (MVF Global - Capture Edge) using the current `page/changes.js` and `page/changes.css`. Attaches the QA Audience, picks a metric pack based on page type (advertorial or STF), and starts the experiment as QA-gated. The team QAs by visiting the page URL with `?optly_qa=true`.
+Creates a new A/B experiment in Optimizely (MVF Global - Capture Edge) using the current `page/changes.js` and `page/changes.css`. Attaches the QA Audience, picks a metric pack based on page type (advertorial or STF), and starts the experiment as QA-gated. After creating, also reports the current Optimizely state of the experiment (same info as `/qa`). The team QAs by visiting the page URL with `?optly_qa=true`.
 
 `$ARGUMENTS` is optional. If non-empty, it's used as the experiment URL.
 
@@ -9,7 +9,7 @@ Creates a new A/B experiment in Optimizely (MVF Global - Capture Edge) using the
 - `page/index.html` exists (i.e. user has run `/fetch <url>`)
 - `page/changes.js` and `page/changes.css` exist
 - `.claude/optimizely.json` exists
-- The Optimizely Experimentation MCP (`optimizely-experimentation`) is authenticated. If not, tell the user to run `/mcp` and authenticate, then re-run `/push`.
+- The Optimizely Experimentation MCP (`optimizely-experimentation`) is authenticated. If not, tell the user to run `/mcp` and authenticate, then re-run `/create`.
 
 ## Steps
 
@@ -92,22 +92,58 @@ Creates a new A/B experiment in Optimizely (MVF Global - Capture Edge) using the
 
 9. **Save the experiment ID.** Write the experiment ID (as a plain string with no whitespace or quotes) to `.experiment-id` in the repo root.
 
-10. **Report.** Print a single tight block:
+10. **Fetch the created state from Optimizely.** Verify what was actually persisted. Use `mcp__optimizely-experimentation__exp_execute_query` with:
+
+    ```json
+    {
+      "steps": [{
+        "entity": "experiment",
+        "filters": [
+          { "field": "project_id", "operator": "equals", "value": "<project_id>" },
+          { "field": "id", "operator": "equals", "value": "<experiment_id>" }
+        ],
+        "return_fields": ["id", "name", "status", "audience_conditions", "url_targeting", "variations", "metrics"],
+        "limit": 1
+      }]
+    }
+    ```
+
+    From the result, derive:
+    - Audience label: `QA-gated` if `audience_conditions` references `qa_audience_id` from config, else show raw value.
+    - Variation summary: name, weight as percentage, count of changes (split by type — CSS vs JS).
+    - Metric names: resolve `event_id` → name by a follow-up `exp_execute_query` on `event` if names aren't in the response. Use the order from the experiment's `metrics` array — the first is **primary**.
+    - URL: from `url_targeting.edit_url`.
+
+11. **Report.** Print this combined block:
 
     ```
-    Pushed: <experiment name>
-      ID:        <experiment_id>
-      Optimizely: https://app.optimizely.com/v2/projects/<project_id>/experiments/<experiment_id>
-      QA URL:    <page_url>?optly_qa=true&optimizely_x=<experiment_id>&optimizely_log=debug
+    Created: <experiment name>
+      ID:          <experiment_id>
+      Status:      <status>
+      Audience:    <QA-gated | other>
+      URL:         <edit_url>
+      Optimizely:  https://app.optimizely.com/v2/projects/<project_id>/experiments/<experiment_id>
+      QA URL:      <edit_url>?optly_qa=true&optimizely_x=<experiment_id>&optimizely_log=debug
 
-    Status: running, QA-gated (audience: QA Audience).
+    Variations:
+      1. Original — 50%, 0 changes
+      2. Variation 1 — 50%, <n> changes (<x> CSS, <y> JS)
+
+    Metrics (in order):
+      1. <name>  [primary]
+      2. <name>
+      ...
+
     Open the QA URL in your browser to verify. When happy, run /golive.
     ```
+
+    If anything in the verification step looked wrong (audience not QA-gated, metric count mismatch, variation changes empty when they shouldn't be), surface the discrepancy at the bottom of the report so the user can fix it via the Optimizely UI before going live.
 
 ## Notes
 
 - This command does NOT modify `page/changes.js` or `page/changes.css` — they stay in git for review and historical record.
-- If you've already pushed an experiment, running `/push` again creates a NEW experiment with a new ID. The old experiment is untouched. `.experiment-id` is overwritten to point at the new one.
+- If you've already created an experiment, running `/create` again creates a NEW experiment with a new ID. The old experiment is untouched. `.experiment-id` is overwritten to point at the new one.
 - Optimizely auto-creates the Page entity from the URL on first use. Subsequent experiments for the same URL reuse that Page (matched by name).
 - The Original (control) variation has empty `actions` — visitors in control see the unmodified page. Only Variation 1 carries the JS/CSS.
 - Make sure to JSON-stringify the inner objects when passing `template_data` and `audience_conditions` — those fields expect strings, not nested objects.
+- The verification + report step (10–11) is the same data `/qa` returns. `/qa` exists as a standalone command for checking experiments later (e.g. before `/golive` after a break, or to inspect an experiment by ID).
