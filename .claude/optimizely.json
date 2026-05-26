@@ -4,8 +4,6 @@
     "qa_audience_id": "21033421785",
     "qa_audience_name": "QA Audience",
     "qa_url_param": "optly_qa=true",
-    "default_owner_initials": "LB",
-    "default_team": "Websites Team",
     "metric_packs": {
         "advertorial": [
             { "event_id": "23174871600", "name": "Custom - Final Conversion",          "aggregator": "unique", "scope": "visitor", "winning_direction": "increasing" },

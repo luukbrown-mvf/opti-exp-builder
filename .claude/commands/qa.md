@@ -36,7 +36,7 @@ Shows the current state of the most recently created experiment in Optimizely. U
    - **Status**: `running`, `paused`, `not_started`, `archived`, `concluded`
    - **Audience**: parse `audience_conditions` — if it contains the `qa_audience_id` from config, label as "QA-gated"; if it equals `"everyone"`, label as "Live (everyone)". Anything else, show the raw value.
    - **URL targeting**: from `url_targeting.edit_url` (and `url_targeting.conditions` if present)
-   - **Variations**: list each with its name, weight (as percentage), and a count of changes. Don't print the full JS/CSS — just confirm the change count.
+   - **Variations**: list each with its name, weight (as percentage), `variation_id`, and a count of changes. Don't print the full JS/CSS — just confirm the change count. Remember the `variation_id` of the variant you want to QA (typically `Variation 1`) — the QA URL needs it.
    - **Metrics**: list each by name (resolve via secondary `exp_execute_query` on `event` entity if needed) in order — note that the first metric is the **primary**.
    - **Earliest** (first activated) and **last_modified**.
 
@@ -60,7 +60,7 @@ Shows the current state of the most recently created experiment in Optimizely. U
      2. <name>
      ...
 
-   QA URL: <edit_url>?optly_qa=true&optimizely_x=<id>&optimizely_log=debug
+   QA URL: <edit_url>?optly_qa=true&optimizely_x=<variation_1_variation_id>&optimizely_log=debug
    ```
 
    At the bottom, if status is `running` and audience is `QA-gated`, add: `Ready to /golive when you're happy.`

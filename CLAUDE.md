@@ -24,17 +24,29 @@ The team uses this to ship variants quickly without context-switching into code.
 The full lifecycle, end to end, is:
 
 ```
-/fetch <url> → describe changes → /debug (if needed) → /create → /qa → /golive
+/fetch <url> → describe changes → /create → /republish (iterate) → /qa → /golive
 ```
 
 1. User runs `/fetch <url>` — the page is fetched to `page/index.html` (with `changes.css` and `changes.js` already injected), the preview server is started if not running, and a Browser Sync URL is printed. Only `page/index.html` is overwritten — `changes.css` and `changes.js` are untouched.
 2. User describes changes in plain English. You edit `page/changes.css` for styling and `page/changes.js` for behaviour.
 3. The local server live-reloads on save — user verifies in their browser.
-4. When happy, the user runs `/create` — this creates the experiment in Optimizely with the QA Audience attached, the right metric pack (advertorial vs STF), and the variant code from `page/changes.js` + `page/changes.css`. The experiment is `running` but only the QA Audience sees it.
-5. User QAs by opening the QA URL Claude returns (`?optly_qa=true&optimizely_x=<id>`). They can run `/qa` to confirm Optimizely's stored state matches local.
-6. When verified, user runs `/golive` — swaps the QA Audience for `everyone`. Real traffic flows.
+4. When happy, the user runs `/create` — this creates the experiment in Optimizely with the QA Audience attached, the right metric pack (advertorial vs STF), and the variant code from `page/changes.js` + `page/changes.css`. The experiment is `running` but only the QA Audience sees it. A background poller fires Chrome incognito with the QA URL once the snippet propagates (~3 min).
+5. If the user wants to tweak the code after `/create`, they edit `page/changes.*` and run `/republish` — pushes the new code to the same experiment, forces a publish via the `pause → running` cycle (the MCP has no native publish op; this is the workaround), and auto-pops Chrome incognito again on propagation.
+6. User QAs by opening the QA URL Claude returns (`?optly_qa=true&optimizely_x=<variation_id>`). They can run `/qa` to confirm Optimizely's stored state matches local.
+7. When verified, user runs `/golive` — swaps the QA Audience for `everyone`. Real traffic flows.
 
-`/debug` is for when something looks wrong. **Trigger the `/debug` flow yourself** (without making them type it) if they say things like "it's broken", "doesn't work", "I don't see it", "check it for me", "is it working?".
+### When the user reports something broken
+
+Trigger this flow yourself whenever the user says things like *"it's broken"*, *"doesn't work"*, *"I don't see it"*, *"check it for me"*, *"is it working?"* — they shouldn't have to type a slash command for this.
+
+1. **Check active page.** If `page/index.html` doesn't exist, tell them to `/fetch <url>` first and stop.
+2. **Capture desktop** via the `chrome-devtools` MCP: `new_page` to `http://localhost:3000` (`background: true` so focus isn't stolen) → `resize_page` to 1280×800 → `wait_for` network idle → `take_screenshot` (full page) → `list_console_messages`.
+3. **Analyse.** Compare what you see against the user's intent and the current `page/changes.js` / `page/changes.css`. Look for: places the change didn't apply, layout/spacing bugs the change caused, console errors from `changes.js`. Ignore third-party / analytics / Optimizely Edge mismatches on localhost.
+4. **Capture mobile only if warranted.** Skip mobile by default. Resize to 375×812 + reload + screenshot + console only when: the user mentioned mobile/phone/small screen; the desktop bug looks viewport-dependent (`position: fixed`, flex/grid layout, media-query CSS); or the fix you're about to make touches viewport-dependent CSS.
+5. **Add temporary `console.log`s only if the screenshot + console didn't reveal the cause** (silent selector, callback never firing, condition unexpectedly false). Reload, read console. **Remove every log you added before finishing** — `changes.js` ships to Optimizely; no production console spam.
+6. **Fix what's clearly wrong** in `page/changes.js` / `page/changes.css`. The server live-reloads on save. Stay within the JS rules above (ES2015 ceiling).
+7. **`close_page`** so each round runs on a clean lifecycle (open → use → close).
+8. **Report in plain English**: what was wrong, what you fixed, what (if anything) you couldn't fix and need them to clarify. If the issue is subjective ("looks weird"), describe what you see and ask one targeted question rather than guessing. Don't redesign things they didn't ask about.
 
 ### Project config
 

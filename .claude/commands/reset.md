@@ -73,9 +73,12 @@ Resets `changes.css` and `changes.js` to their stubs, leaving `page/index.html` 
    })();
    ```
 
-3. Report: "Reset — changes wiped, http://localhost:3000 will auto-reload."
+3. Delete `.experiment-id` if it exists (`rm -f .experiment-id`). Otherwise `/create` will refuse to run, since it now treats a present `.experiment-id` as "there's already an experiment, use `/republish` instead." A reset implies starting over, so the pointer goes too.
+
+4. Report: "Reset — changes wiped, `.experiment-id` cleared, http://localhost:3000 will auto-reload."
 
 ## Notes
 
 - Keeps `page/index.html` intact — the page snapshot is preserved.
+- The Optimizely experiment that `.experiment-id` pointed at is **NOT** archived — it still exists in Optimizely. `/reset` only forgets the local pointer to it. Archive it manually in the Optimizely UI if you want it gone.
 - To also wipe the page and start completely fresh, run `/fetch <url>` instead.

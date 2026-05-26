@@ -34,14 +34,7 @@ Removes the QA Audience from the experiment so it serves the whole audience matc
    - If `status` is not `running`: warn that the experiment isn't running and ask if they want to also flip it to running. If they say no, stop.
    - Otherwise, proceed.
 
-5. **Confirm with the user using `AskUserQuestion`:**
-
-   Question: `Go live with "<experiment name>"? This removes the QA Audience — real traffic will flow.`
-   Options:
-   - `Yes, go live` (single-select)
-   - `Cancel`
-
-   If they pick Cancel (or anything other than "Yes, go live"), report cancelled and stop.
+5. **Do NOT prompt for confirmation.** Running `/golive` IS the confirmation — proceed straight to the update without an `AskUserQuestion` step.
 
 6. **Call the MCP to update the experiment.** Use `mcp__optimizely-experimentation__exp_manage_entity_lifecycle` with:
 

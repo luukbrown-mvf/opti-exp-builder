@@ -9,24 +9,34 @@ Creates a new A/B experiment in Optimizely (MVF Global - Capture Edge) using the
 - `page/index.html` exists (i.e. user has run `/fetch <url>`)
 - `page/changes.js` and `page/changes.css` exist
 - `.claude/optimizely.json` exists
+- `.env` exists at repo root with `TEAM_NAME`, `EXPERIMENTER_INITIALS`, `AUDIENCE_SEGMENT` set. If `.env` is missing, tell the user to copy `.env.example` to `.env` and fill it in.
 - The Optimizely Experimentation MCP (`optimizely-experimentation`) is authenticated. If not, tell the user to run `/mcp` and authenticate, then re-run `/create`.
+- **`.experiment-id` does NOT exist** (or is empty). If it already points at an experiment, stop and tell the user: *"An experiment is already tracked (`.experiment-id` = `<id>`). Run `/republish` to push changes to it, or delete `.experiment-id` first if you really want a fresh experiment."* Do NOT silently overwrite.
 
 ## Steps
 
 1. **Validate prerequisites.** If anything in the list above is missing, report what's missing and stop. Do NOT proceed with partial state.
 
-2. **Read the config.** Load `.claude/optimizely.json`. You'll need `project_id`, `qa_audience_id`, `default_owner_initials`, `default_team`, `metric_packs.advertorial`, `metric_packs.stf`.
+2. **Read config and env.**
+   - Load `.claude/optimizely.json`. You'll need `project_id`, `qa_audience_id`, `metric_packs.advertorial`, `metric_packs.stf`.
+   - Load `.env` (parse each non-comment `KEY=VALUE` line, trim surrounding whitespace; values may contain spaces and are NOT quoted). Read `TEAM_NAME`, `EXPERIMENTER_INITIALS`, `AUDIENCE_SEGMENT`. If any of these three is missing or empty, prompt the user for that one value via `AskUserQuestion` — don't ask for the ones that are present.
 
-3. **Gather inputs from the user using `AskUserQuestion`:**
+3. **Gather remaining inputs from the user using `AskUserQuestion`:**
 
    - **URL of the page.** If `$ARGUMENTS` is empty, prompt for the URL. Tell the user: "Paste the full URL of the page this experiment targets." Do NOT try to recover the URL from `page/index.html` — the `<base>` tag only stores the origin, not the path.
    - **Page type.** Single-select: `Advertorial` or `STF (Straight to Form)`. This determines which metric pack to attach.
-   - **Change description.** Free text (e.g. "CTA Updates", "Direct Response V2", "Simplify Overlay").
-   - **Audience segment.** Free text (e.g. "B2C RoW", "AME B2B").
    - **Vertical / Subcat.** Free text (e.g. "Hearing Aids UK", "Telephone Systems US").
-   - Team and initials default from config — do NOT ask unless the user explicitly wants to override.
+   - **Change name (required).** Free text — short label for the experiment that goes into the name (e.g. "CTA Updates", "Direct Response V2", "Simplify Overlay"). This is NOT optional — without it the experiment name is meaningless to the team.
+   - **Hypothesis / description (optional).** This is the Optimizely experiment `description` field. Pre-generate a draft from the actual edits in `page/changes.js` and `page/changes.css` (read them and infer what behaviour or framing changed). The draft **MUST** follow this exact three-clause structure with the literal words `If`, `then`, and `A win would be` present verbatim:
 
-4. **Construct the experiment name.** Pattern: `{change} - {audience} - {vertical} - {team} - {initials}`. Example: `CTA Updates - B2C RoW - Hearing Aids UK - Websites Team - LB`. Use this exact pattern — the team's reporting depends on it.
+     > **If** [the change we made], **then** [the predicted user behaviour]. **A win would be** [the plain-language CRO outcome].
+
+     Example: `If we reframe the grid CTAs from "explore your options" to "see what you qualify for", then users will perceive the form as a personal qualification check and start it more often. A win would be an increase in conversion rate.`
+
+     Frame the "win" in plain CRO language — "an increase in conversion rate", "more form starts", "higher lead volume". **Do NOT reference Optimizely metric names** (no "Custom - Final Conversion", no "Custom - Completed First Question" etc.) — keep the hypothesis readable to non-technical stakeholders. Offer the draft as the suggested option in the prompt, with "Skip" as a sibling option so the user can leave the description blank. If the user picks the AI draft, send that as the description; if they skip, send an empty string.
+   - Audience, team, and initials come from `.env` — do NOT ask unless missing from env.
+
+4. **Construct the experiment name.** Pattern: `{change name} - {audience} - {vertical} - {team} - {initials}` — e.g. `CTA Updates - B2C RoW - Hearing Aids UK - Websites Team - LB`. The team's reporting depends on this pattern. Don't reorder fields.
 
 5. **Load the variant code** from `page/changes.js` and `page/changes.css`. Read them with the `Read` tool. Keep both as exact strings — do NOT trim, reformat, or transform.
 
@@ -44,7 +54,8 @@ Creates a new A/B experiment in Optimizely (MVF Global - Capture Edge) using the
 
    - `operation`: `"create"`
    - `entity_type`: `"experiment"`
-   - `mode`: `"direct"`
+   - `mode`: `"template"` (direct mode is not implemented for experiments — the MCP returns `"Creation not yet implemented for entity type: 'experiment'"`)
+   - `template_id`: `"experiment"`
    - `project_id`: the project_id from config (as string)
    - `template_data`: a JSON-stringified object with the shape below:
 
@@ -69,7 +80,7 @@ Creates a new A/B experiment in Optimizely (MVF Global - Capture Edge) using the
        "variations": [
          { "name": "Original", "weight": 5000, "actions": [] },
          {
-           "name": "Variation 1",
+           "name": "Variation #1",
            "weight": 5000,
            "actions": [{
              "changes": [
@@ -87,10 +98,85 @@ Creates a new A/B experiment in Optimizely (MVF Global - Capture Edge) using the
 
 8. **Handle the response.**
 
-   - If the MCP returns success, extract the new experiment's `id`.
+   - If the MCP returns success, extract the new experiment's `id` from `data.createdEntities[]` where `entityType === "experiment"`.
    - If it returns an error, surface the full error message and stop. Do NOT write any local state.
 
 9. **Save the experiment ID.** Write the experiment ID (as a plain string with no whitespace or quotes) to `.experiment-id` in the repo root.
+
+9a. **Convert to UI-shaped `url_targeting` (CRITICAL for the experiment to actually run).** The MCP's `page.ref.auto_create` path creates a top-level Page entity referenced via `page_ids`, with no `url_targeting` block. UI-created experiments use a per-experiment `url_targeting` block (which auto-creates a dedicated "URL Targeting for …" Page on the fly). Without `url_targeting`, the experiment can fail to activate even when the page has conditions — and the structure won't match anything else in the project.
+
+    Run two follow-up updates against the experiment (`exp_manage_entity_lifecycle`, `operation="update"`, `entity_type="experiment"`, `mode="direct"`):
+
+    **Update A — set `url_targeting`** (omit the `key` field; the API rejects long keys, and Optimizely auto-generates one from the experiment name):
+
+    ```json
+    {
+      "url_targeting": {
+        "page_id": <ignored on first set; the API will auto-create a per-experiment URL-targeting page>,
+        "edit_url": "<the URL>",
+        "activation_type": "immediate",
+        "conditions": "[\"and\", [\"or\", {\"match_type\": \"simple\", \"type\": \"url\", \"value\": \"<the URL>\"}]]"
+      },
+      "variations": [
+        { "variation_id": <Original variation_id>, "name": "Original",     "weight": 5000 },
+        { "variation_id": <Variation #1 variation_id>, "name": "Variation #1", "weight": 5000 }
+      ]
+    }
+    ```
+
+    The response will contain `url_targeting.page_id` — that's the NEW per-experiment page Optimizely just created. **Capture this `new_page_id`.** The setting of `url_targeting` wipes `variations[*].actions`, which is why update B follows.
+
+    **Update B — re-attach variation actions** using `new_page_id`:
+
+    ```json
+    {
+      "variations": [
+        { "variation_id": <Original variation_id>,     "name": "Original",     "weight": 5000, "actions": [{"page_id": <new_page_id>, "changes": []}] },
+        { "variation_id": <Variation #1 variation_id>, "name": "Variation #1", "weight": 5000, "actions": [{"page_id": <new_page_id>, "changes": [
+          {"type": "custom_css",  "value": "<changes.css contents>"},
+          {"type": "custom_code", "value": "<changes.js contents>"}
+        ]}] }
+      ]
+    }
+    ```
+
+    After this, the experiment matches UI-created experiments structurally: inline `url_targeting`, dedicated URL-targeting page, `Variation #1` naming, variation actions wired to the URL-targeting page.
+
+    Note: this leaves the original auto-created page (the one referenced by `page_ids` from the initial create) orphaned. It's harmless — leave it.
+
+9b. **Start the experiment.** The `status: "running"` field in `template_data` is **ignored on create** — the experiment comes back as `not_started`. Immediately follow up with an update call to flip it to `running`:
+
+    ```
+    mcp__optimizely-experimentation__exp_manage_entity_lifecycle(
+      operation="update",
+      entity_type="experiment",
+      entity_id=<experiment_id>,
+      mode="direct",
+      project_id=<project_id>,
+      template_data='{"status":"running"}'
+    )
+    ```
+
+    The update response returns the full experiment state — use it for the verification step below instead of re-querying.
+
+9c. **Launch the propagation poller (background, detached).** Initial `/create` auto-publishes because `not_started → running` is the publish-trigger code path. The snippet then takes ~3 minutes to roll the new variation code through Optimizely's CDN. Launch `app/wait-for-live.sh` (Playwright-based real-browser check that opens Chrome incognito on detection) **fully detached** with `nohup … & disown` so it outlives the Claude session AND so the chat isn't blocked / spammed with poll lines. The user just wants Chrome to pop — they don't want to watch a Claude spinner.
+
+    Pick a `marker`: a unique substring from `page/changes.css` or `page/changes.js` guaranteed to appear in the rendered page after Optimizely applies the variation. In order of preference:
+    1. First hex color in `page/changes.css` (e.g. `#ff0066`)
+    2. Any unique CSS selector + property combination unlikely to be on the original page
+    3. A distinctive string literal from `page/changes.js` (e.g. the new headline text)
+
+    Launch via Bash (do NOT use `run_in_background: true` — that ties the job to the Claude harness which kills it on session end):
+
+    ```
+    nohup ./app/wait-for-live.sh \
+      "<the URL>?optly_qa=true&optimizely_x=<variation_1_variation_id>&optimizely_log=debug" \
+      "<marker>" \
+      > /tmp/optly-wait-<experiment_id>.out 2>&1 < /dev/null &
+    disown
+    ```
+
+    In the report tell the user: "Chrome incognito will pop in ~3 min. If it doesn't, `tail /tmp/optly-wait.log`."
 
 10. **Fetch the created state from Optimizely.** Verify what was actually persisted. Use `mcp__optimizely-experimentation__exp_execute_query` with:
 
@@ -113,6 +199,7 @@ Creates a new A/B experiment in Optimizely (MVF Global - Capture Edge) using the
     - Variation summary: name, weight as percentage, count of changes (split by type — CSS vs JS).
     - Metric names: resolve `event_id` → name by a follow-up `exp_execute_query` on `event` if names aren't in the response. Use the order from the experiment's `metrics` array — the first is **primary**.
     - URL: from `url_targeting.edit_url`.
+    - **Variant `variation_id` (NOT the experiment ID).** The QA URL's `optimizely_x` parameter must be the `variation_id` of the variation you want to preview (typically `Variation 1`, not `Original`). Using the experiment ID won't force the variant.
 
 11. **Report.** Print this combined block:
 
@@ -123,7 +210,7 @@ Creates a new A/B experiment in Optimizely (MVF Global - Capture Edge) using the
       Audience:    <QA-gated | other>
       URL:         <edit_url>
       Optimizely:  https://app.optimizely.com/v2/projects/<project_id>/experiments/<experiment_id>
-      QA URL:      <edit_url>?optly_qa=true&optimizely_x=<experiment_id>&optimizely_log=debug
+      QA URL:      <edit_url>?optly_qa=true&optimizely_x=<variation_1_variation_id>&optimizely_log=debug
 
     Variations:
       1. Original — 50%, 0 changes
