@@ -16,14 +16,7 @@ Build, QA, and ship Optimizely A/B tests by chatting with Claude. Describe the v
    /mcp
    ```
    You should see `optimizely-experimentation` already in the list (it's configured at the repo level via `.mcp.json`). Authenticate it via the browser when prompted. One-time setup.
-6. Create a `.env` file at the repo root with your personal defaults (used to build experiment names):
-   ```
-   TEAM_NAME=Websites Team
-   EXPERIMENTER_INITIALS=<your initials>
-   AUDIENCE_SEGMENT=B2C RoW
-   ```
-   `.env` is gitignored — your initials stay local.
-7. That's it — Claude installs the rest (Playwright, Chromium, browser-sync) the first time you run `/fetch`. **The first `/fetch` downloads ~115 MB and takes 30–90 seconds** depending on connection.
+6. That's it — Claude installs the rest (Playwright, Chromium, browser-sync) the first time you run `/fetch`. **The first `/fetch` downloads ~115 MB and takes 30–90 seconds** depending on connection. On your first `/create`, Claude will ask three quick questions (team, initials, audience segment) and save them locally to `.env` — you'll never be asked again unless you delete the file.
 
 ## The whole flow
 

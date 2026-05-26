@@ -9,7 +9,7 @@ Creates a new A/B experiment in Optimizely (MVF Global - Capture Edge) using the
 - `page/index.html` exists (i.e. user has run `/fetch <url>`)
 - `page/changes.js` and `page/changes.css` exist
 - `.claude/optimizely.json` exists
-- `.env` exists at repo root with `TEAM_NAME`, `EXPERIMENTER_INITIALS`, `AUDIENCE_SEGMENT` set. If `.env` is missing, tell the user to create it with those three keys (see README's first-time setup).
+- `.env` exists at repo root with `TEAM_NAME`, `EXPERIMENTER_INITIALS`, `AUDIENCE_SEGMENT` set. If `.env` is missing or any of the three is absent/empty, `/create` will prompt for them and write the file itself — no manual setup required.
 - The Optimizely Experimentation MCP (`optimizely-experimentation`) is authenticated. If not, tell the user to run `/mcp` and authenticate, then re-run `/create`.
 - **`.experiment-id` does NOT exist** (or is empty). If it already points at an experiment, stop and tell the user: *"An experiment is already tracked (`.experiment-id` = `<id>`). Run `/republish` to push changes to it, or delete `.experiment-id` first if you really want a fresh experiment."* Do NOT silently overwrite.
 
@@ -19,7 +19,12 @@ Creates a new A/B experiment in Optimizely (MVF Global - Capture Edge) using the
 
 2. **Read config and env.**
    - Load `.claude/optimizely.json`. You'll need `project_id`, `qa_audience_id`, `metric_packs.advertorial`, `metric_packs.stf`.
-   - Load `.env` (parse each non-comment `KEY=VALUE` line, trim surrounding whitespace; values may contain spaces and are NOT quoted). Read `TEAM_NAME`, `EXPERIMENTER_INITIALS`, `AUDIENCE_SEGMENT`. If any of these three is missing or empty, prompt the user for that one value via `AskUserQuestion` — don't ask for the ones that are present.
+   - Load `.env` if it exists (parse each non-comment `KEY=VALUE` line, trim surrounding whitespace; values may contain spaces and are NOT quoted). Read `TEAM_NAME`, `EXPERIMENTER_INITIALS`, `AUDIENCE_SEGMENT`.
+   - **For each of those three that is missing or empty, prompt the user via `AskUserQuestion` with realistic example options so they don't have to invent values from scratch.** Suggested option lists:
+     - `TEAM_NAME` (`header: "Team"`): `Websites Team`, `Brand Team`, `Performance Team`.
+     - `EXPERIMENTER_INITIALS` (`header: "Initials"`): two- or three-letter combos based on the user's name if known (e.g. for "Luuk Brown": `LB`); otherwise leave it to the "Other" free-text option.
+     - `AUDIENCE_SEGMENT` (`header: "Audience"`): `B2C RoW`, `B2C US`, `AME B2B`, `EMEA B2B`.
+   - After collecting answers, **write `.env`** at the repo root with the resolved values, one `KEY=VALUE` per line, no quotes. If the file already exists with partial values, rewrite it with the complete set. (`.env` is gitignored — safe to overwrite.) Don't re-prompt the user on subsequent `/create` runs as long as all three are populated.
 
 3. **Gather remaining inputs from the user using `AskUserQuestion`:**
 
