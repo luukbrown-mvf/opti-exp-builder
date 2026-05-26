@@ -4,21 +4,26 @@ Build, QA, and ship Optimizely A/B tests by chatting with Claude. Describe the v
 
 ## First-time setup
 
-1. You should already have Claude Code installed (IT set it up). If you don't, get it from them.
-2. Add the `chrome-devtools` MCP (Claude uses it to screenshot and inspect the live preview when something looks broken). Easiest: open Claude Code and ask it *"install the chrome-devtools MCP"*.
-3. Add the **Optimizely Experimentation MCP** (needed for `/create`, `/republish`, `/qa`, `/golive`). In Claude Code, run:
+1. You should already have Claude Code installed (IT set it up). If not, get it from them.
+2. **Node.js 20+** must be installed (`node --version` to check). If missing:
+   - macOS: `brew install node@20`
+   - Windows: download from https://nodejs.org/
+   - Linux: `sudo apt install nodejs npm` or use [nvm](https://github.com/nvm-sh/nvm)
+3. **Google Chrome** installed (the team's standard browser; QA URLs auto-open in a Chrome incognito window).
+4. Add the `chrome-devtools` MCP (Claude uses it to screenshot and inspect the live preview when something looks broken). Easiest: open Claude Code and ask it *"install the chrome-devtools MCP"*.
+5. Add the **Optimizely Experimentation MCP** (needed for `/create`, `/republish`, `/qa`, `/golive`). In Claude Code, run:
    ```
    /mcp
    ```
    You should see `optimizely-experimentation` already in the list (it's configured at the repo level via `.mcp.json`). Authenticate it via the browser when prompted. One-time setup.
-4. Create a `.env` file at the repo root with your personal defaults (used to build experiment names):
+6. Create a `.env` file at the repo root with your personal defaults (used to build experiment names):
    ```
    TEAM_NAME=Websites Team
    EXPERIMENTER_INITIALS=<your initials>
    AUDIENCE_SEGMENT=B2C RoW
    ```
    `.env` is gitignored — your initials stay local.
-5. That's it — Claude installs the rest (Node, Playwright, browser-sync) the first time you run `/fetch`.
+7. That's it — Claude installs the rest (Playwright, Chromium, browser-sync) the first time you run `/fetch`. **The first `/fetch` downloads ~115 MB and takes 30–90 seconds** depending on connection.
 
 ## The whole flow
 

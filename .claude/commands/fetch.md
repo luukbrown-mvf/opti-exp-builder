@@ -8,7 +8,18 @@ Fetches a live webpage and saves it to `page/index.html` with assets injected. E
 
 1. **Validate input.** If `$ARGUMENTS` is empty or doesn't look like a URL, ask the user for the URL and stop.
 
-2. **Install deps if missing.** If `app/node_modules` doesn't exist, run `npm install --prefix app` and wait for it to finish. Tell the user "first-time setup, this takes ~30 seconds."
+1a. **Check that Node and npm are installed.** Run `command -v node >/dev/null && command -v npm >/dev/null && echo ok || echo missing`. If `missing`, stop and tell the user:
+
+    > Node.js (and npm) aren't installed on this machine. Install Node 20+ before running `/fetch`. Easiest options:
+    > - macOS: `brew install node@20`
+    > - Linux: `sudo apt install nodejs npm` (Debian/Ubuntu) or use [nvm](https://github.com/nvm-sh/nvm)
+    > - Windows: download from https://nodejs.org/
+    >
+    > Then re-run `/fetch`.
+
+    Do NOT attempt to install Node yourself — that's a system-level change requiring sudo and is the user's call.
+
+2. **Install deps if missing.** If `app/node_modules` doesn't exist, run `npm install --prefix app` and wait for it to finish. Tell the user "first-time setup — this downloads Playwright + Chromium (~115 MB) and takes 30–90 seconds depending on connection."
 
 3. **Ensure preview server is running.** Run `pgrep -f 'browser-sync start' > /dev/null && echo running || echo stopped`. If `stopped`, start it:
 
