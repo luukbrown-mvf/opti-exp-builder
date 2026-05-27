@@ -7,6 +7,7 @@
         "dev": "browser-sync start --server ../page --files '../page/**/*' --no-notify --no-snippet"
     },
     "dependencies": {
-        "browser-sync": "^3.0.0"
+        "browser-sync": "^3.0.0",
+        "playwright": "^1.60.0"
     }
 }
