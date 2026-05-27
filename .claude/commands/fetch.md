@@ -27,7 +27,18 @@ Fetches a live webpage and saves it to `page/index.html` with assets injected. E
    ./app/node_modules/.bin/browser-sync start --server page --files 'page/**/*' --no-notify --no-snippet > /tmp/bs-out.txt 2>&1 &
    ```
 
-   Then wait 3 seconds for it to bind a port. `--no-snippet` suppresses browser-sync's auto-injected client script (it's injected manually before `<base>` to avoid URL rewriting). Omitting `--port` lets browser-sync auto-assign a free port.
+   Then poll for it to bind a port instead of sleeping a fixed amount — it's usually ready in under a second, and a fixed wait sometimes isn't long enough on a slow machine. Loop until the localhost URL appears in `/tmp/bs-out.txt`, capped at ~8s:
+
+   ```bash
+   for i in $(seq 1 40); do
+     grep -q 'http://localhost:[0-9]' /tmp/bs-out.txt 2>/dev/null && break
+     sleep 0.2
+   done
+   ```
+
+   If the loop finishes with no URL in the file, report that browser-sync failed to start (point the user at `/tmp/bs-out.txt`) and stop — don't continue to fetch.
+
+   `--no-snippet` suppresses browser-sync's auto-injected client script (it's injected manually before `<base>` to avoid URL rewriting). Omitting `--port` lets browser-sync auto-assign a free port.
 
 4. **Fetch and process in one Bash command.** Run the following, substituting `$ARGUMENTS` for `URL`:
 

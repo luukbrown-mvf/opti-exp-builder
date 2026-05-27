@@ -20,13 +20,13 @@ Creates a new A/B experiment in Optimizely (MVF Global - Capture Edge) using the
 2. **Read config and env.**
    - Load `.claude/optimizely.json`. You'll need `project_id`, `qa_audience_id`, `metric_packs.advertorial`, `metric_packs.stf`.
    - Load `.env` if it exists (parse each non-comment `KEY=VALUE` line, trim surrounding whitespace; values may contain spaces and are NOT quoted). Read `TEAM_NAME`, `EXPERIMENTER_INITIALS`, `AUDIENCE_SEGMENT`.
-   - **For each of those three that is missing or empty, prompt the user via `AskUserQuestion` with realistic example options so they don't have to invent values from scratch.** Suggested option lists:
+   - **For each of those three that is missing or empty, prompt the user via `AskUserQuestion` with realistic example options so they don't have to invent values from scratch. Ask all the missing ones in a SINGLE `AskUserQuestion` call (it accepts up to 4 questions per call) — do NOT prompt one at a time.** Suggested option lists:
      - `TEAM_NAME` (`header: "Team"`): `Websites Team`, `Brand Team`, `Performance Team`.
      - `EXPERIMENTER_INITIALS` (`header: "Initials"`): two- or three-letter combos based on the user's name if known (e.g. for "Luuk Brown": `LB`); otherwise leave it to the "Other" free-text option.
      - `AUDIENCE_SEGMENT` (`header: "Audience"`): `B2C RoW`, `B2C US`, `AME B2B`, `EMEA B2B`.
    - After collecting answers, **write `.env`** at the repo root with the resolved values, one `KEY=VALUE` per line, no quotes. If the file already exists with partial values, rewrite it with the complete set. (`.env` is gitignored — safe to overwrite.) Don't re-prompt the user on subsequent `/create` runs as long as all three are populated.
 
-3. **Gather remaining inputs from the user using `AskUserQuestion`:**
+3. **Gather remaining inputs from the user using `AskUserQuestion`.** Collect these in as few `AskUserQuestion` calls as possible — each call accepts up to 4 questions, so do NOT prompt one field at a time. Before prompting, read `page/changes.js` and `page/changes.css` once (you'll reuse those exact contents in step 5) so the hypothesis draft below is ready to offer. Suggested batching: one call for URL + page type + vertical + change name (drop the URL question if `$ARGUMENTS` already supplied it), then a second call for the hypothesis (it needs its own AI-drafted option plus a "Skip" sibling). The fields:
 
    - **URL of the page.** If `$ARGUMENTS` is empty, prompt for the URL. Tell the user: "Paste the full URL of the page this experiment targets." Do NOT try to recover the URL from `page/index.html` — the `<base>` tag only stores the origin, not the path.
    - **Page type.** Single-select: `Advertorial` or `STF (Straight to Form)`. This determines which metric pack to attach.
@@ -43,7 +43,7 @@ Creates a new A/B experiment in Optimizely (MVF Global - Capture Edge) using the
 
 4. **Construct the experiment name.** Pattern: `{change name} - {audience} - {vertical} - {team} - {initials}` — e.g. `CTA Updates - B2C RoW - Hearing Aids UK - Websites Team - LB`. The team's reporting depends on this pattern. Don't reorder fields.
 
-5. **Load the variant code** from `page/changes.js` and `page/changes.css`. Read them with the `Read` tool. Keep both as exact strings — do NOT trim, reformat, or transform.
+5. **Load the variant code** from `page/changes.js` and `page/changes.css`. If you already read them in step 3 to draft the hypothesis, reuse those exact contents — don't re-read. Otherwise read them with the `Read` tool. Keep both as exact strings — do NOT trim, reformat, or transform.
 
 6. **Build the metric pack array.** Take the chosen pack from config (`metric_packs.advertorial` or `metric_packs.stf`). For each entry, convert to the MCP shape:
 
@@ -183,7 +183,7 @@ Creates a new A/B experiment in Optimizely (MVF Global - Capture Edge) using the
 
     In the report tell the user: "Chrome incognito will pop in ~3 min. If it doesn't, `tail /tmp/optly-wait.log`."
 
-10. **Fetch the created state from Optimizely.** Verify what was actually persisted. Use `mcp__optimizely-experimentation__exp_execute_query` with:
+10. **Verify what was actually persisted — reuse the step 9b response, don't re-query by default.** The `status`-flip update in step 9b returns the full experiment state (variations with their `variation_id`s, `url_targeting`, `metrics`, `status`, `audience_conditions`). Use that response directly for the report below — it's authoritative and saves a round-trip. **Only** fall back to the `mcp__optimizely-experimentation__exp_execute_query` call below if the 9b response is missing any of those fields:
 
     ```json
     {
@@ -202,7 +202,7 @@ Creates a new A/B experiment in Optimizely (MVF Global - Capture Edge) using the
     From the result, derive:
     - Audience label: `QA-gated` if `audience_conditions` references `qa_audience_id` from config, else show raw value.
     - Variation summary: name, weight as percentage, count of changes (split by type — CSS vs JS).
-    - Metric names: resolve `event_id` → name by a follow-up `exp_execute_query` on `event` if names aren't in the response. Use the order from the experiment's `metrics` array — the first is **primary**.
+    - Metric names: map each `event_id` in the experiment's `metrics` array to its `name` in the metric pack you loaded from `.claude/optimizely.json` in step 2 (every metric you attached came from that pack, so the name is always there — do NOT query the `event` entity). Use the order from the experiment's `metrics` array — the first is **primary**.
     - URL: from `url_targeting.edit_url`.
     - **Variant `variation_id` (NOT the experiment ID).** The QA URL's `optimizely_x` parameter must be the `variation_id` of the variation you want to preview (typically `Variation 1`, not `Original`). Using the experiment ID won't force the variant.
 

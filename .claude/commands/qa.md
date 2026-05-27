@@ -37,7 +37,7 @@ Shows the current state of the most recently created experiment in Optimizely. U
    - **Audience**: parse `audience_conditions` — if it contains the `qa_audience_id` from config, label as "QA-gated"; if it equals `"everyone"`, label as "Live (everyone)". Anything else, show the raw value.
    - **URL targeting**: from `url_targeting.edit_url` (and `url_targeting.conditions` if present)
    - **Variations**: list each with its name, weight (as percentage), `variation_id`, and a count of changes. Don't print the full JS/CSS — just confirm the change count. Remember the `variation_id` of the variant you want to QA (typically `Variation 1`) — the QA URL needs it.
-   - **Metrics**: list each by name (resolve via secondary `exp_execute_query` on `event` entity if needed) in order — note that the first metric is the **primary**.
+   - **Metrics**: list each by name in order — note that the first metric is the **primary**. Resolve each `event_id` to a name using the metric packs in `.claude/optimizely.json` first (it stores `name` for every pack metric, so no query is needed for our standard packs). Only fall back to a secondary `exp_execute_query` on the `event` entity for `event_id`s not found in config — this experiment may not have been created with our packs.
    - **Earliest** (first activated) and **last_modified**.
 
 5. **Report.** Render as:
