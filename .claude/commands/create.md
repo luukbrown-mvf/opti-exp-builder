@@ -171,15 +171,18 @@ Creates a new A/B experiment in Optimizely (MVF Global - Capture Edge) using the
     2. Any unique CSS selector + property combination unlikely to be on the original page
     3. A distinctive string literal from `page/changes.js` (e.g. the new headline text)
 
-    Launch via Bash (do NOT use `run_in_background: true` — that ties the job to the Claude harness which kills it on session end):
+    Launch via Bash (do NOT use `run_in_background: true` — that ties the job to the Claude harness which kills it on session end). Build a QA URL per **non-Original** variation — each of shape `<the URL>?optly_qa=true&optimizely_x=<that variation_id>&optimizely_log=debug`. Arg 1 is the **gate** URL the poller polls for the marker (use the variation that carries the marker — normally Variation #1). After the marker, list **every** variation's QA URL — `wait-for-live.sh` opens them as tabs in ONE incognito window. For a standard single-variant `/create` the gate and the lone tab are the same Variation #1 URL (one tab — unchanged from before):
 
     ```
     nohup ./app/wait-for-live.sh \
-      "<the URL>?optly_qa=true&optimizely_x=<variation_1_variation_id>&optimizely_log=debug" \
+      "<gate QA URL — the variation carrying the marker, normally Variation #1>" \
       "<marker>" \
+      "<QA URL for Variation #1>" \
       > /tmp/optly-wait-<experiment_id>.out 2>&1 < /dev/null &
     disown
     ```
+
+    For an A/B/n test, append one more QA URL line per extra variation (`"<QA URL for Variation #2>" \`, etc.) before the redirect — they all open as tabs in the single window. Don't add the Original/control unless you specifically want to eyeball it.
 
     In the report tell the user: "Chrome incognito will pop in ~3 min. If it doesn't, `tail /tmp/optly-wait.log`."
 
